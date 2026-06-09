@@ -1,0 +1,184 @@
+# SigmaGPT
+
+A full-stack ChatGPT clone built with React and Node.js. Supports user authentication, persistent chat threads, and real-time AI responses powered by the OpenAI API.
+
+---
+
+## Features
+
+- **JWT Authentication** — Signup, login, and logout with secure cookie-based tokens
+- **Persistent Chat Threads** — Conversations are saved to MongoDB and restored on reload
+- **Thread Sidebar** — Browse, switch between, and delete previous conversations
+- **OpenAI Integration** — Messages are sent to the OpenAI API and streamed back as markdown
+- **Syntax Highlighting** — Code blocks in responses are rendered with `rehype-highlight`
+- **Dark Theme UI** — ChatGPT-style dark interface with animated backgrounds
+
+---
+
+## Tech Stack
+
+### Frontend
+| Package | Purpose |
+|---|---|
+| React 19 + Vite | UI framework and build tool |
+| React Router v7 | Client-side routing and protected routes |
+| Axios | HTTP requests with cookie support |
+| React Toastify | Success / error notifications |
+| React Markdown + Rehype Highlight | Render AI responses as formatted markdown |
+| React Spinners | Loading indicator while awaiting AI reply |
+| UUID | Generate unique thread IDs client-side |
+
+### Backend
+| Package | Purpose |
+|---|---|
+| Express 5 | REST API server |
+| Mongoose | MongoDB ODM for threads and users |
+| OpenAI SDK | Chat completion requests |
+| JSON Web Token | Auth token generation and verification |
+| bcryptjs | Password hashing (12 rounds) |
+| cookie-parser | Read JWT from request cookies |
+| CORS | Allow credentialed requests from the frontend |
+| dotenv | Environment variable management |
+
+---
+
+## Project Structure
+
+```
+SigmaGPT/
+├── backend/
+│   ├── controllers/
+│   │   └── AuthController.js      # Signup / Login handlers
+│   ├── middlewares/
+│   │   └── AuthMiddleware.js      # JWT verification middleware
+│   ├── models/
+│   │   ├── UserModel.js           # User schema (email, username, password)
+│   │   └── Thread.js              # Thread + Message schema
+│   ├── routes/
+│   │   ├── AuthRoute.js           # /login  /signup  / (verify)
+│   │   └── chat.js                # /api/chat  /api/thread
+│   ├── utils/
+│   │   ├── SecretToken.js         # JWT creation helper
+│   │   └── openai.js              # OpenAI API call wrapper
+│   ├── server.js                  # Express app entry point
+│   └── .env                       # Environment variables (not committed)
+│
+└── Frontend/
+    └── src/
+        ├── App.jsx                # Routes + auth gate + context provider
+        ├── MyContext.jsx          # Global context definition
+        ├── Login.jsx              # Login page
+        ├── Signup.jsx             # Signup page
+        ├── ChatWindow.jsx         # Main chat UI + navbar + logout
+        ├── Chat.jsx               # Message list with typing animation
+        ├── Sidebar.jsx            # Thread list, new chat, delete
+        └── *.css                  # Per-component stylesheets
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- A MongoDB Atlas cluster (or local MongoDB)
+- An OpenAI API key
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/Patramanish141/SigmaGPT.git
+cd SigmaGPT
+```
+
+### 2. Configure the backend
+
+Create `backend/.env`:
+
+```env
+OPENAI_API_KEY=sk-...
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/?appName=SigmaGPT
+TOKEN_KEY=your_strong_jwt_secret_here
+```
+
+Install dependencies and start the server:
+
+```bash
+cd backend
+npm install
+node server.js
+# Server running on http://localhost:8080
+```
+
+### 3. Start the frontend
+
+```bash
+cd Frontend
+npm install
+npm run dev
+# App running on http://localhost:5173
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+---
+
+## API Reference
+
+### Auth
+
+| Method | Endpoint | Body | Description |
+|--------|----------|------|-------------|
+| POST | `/signup` | `{ email, username, password }` | Register a new user, sets JWT cookie |
+| POST | `/login` | `{ email, password }` | Authenticate user, sets JWT cookie |
+| POST | `/` | — | Verify JWT from cookie, returns `{ status, user }` |
+
+### Chat
+
+| Method | Endpoint | Body / Params | Description |
+|--------|----------|---------------|-------------|
+| POST | `/api/chat` | `{ threadId, message }` | Send a message, get AI reply |
+| GET | `/api/thread` | — | Get all threads (sorted by latest) |
+| GET | `/api/thread/:threadId` | — | Get all messages in a thread |
+| DELETE | `/api/thread/:threadId` | — | Delete a thread |
+
+---
+
+## Auth Flow
+
+```
+User submits login/signup form
+        │
+        ▼
+Backend verifies credentials → signs JWT → sets httpOnly cookie
+        │
+        ▼
+Frontend receives { success: true, user: username }
+        │
+        ▼
+setUsername() updates context → route guard allows access to "/"
+        │
+        ▼
+ChatWindow + Sidebar render
+
+On page refresh → App.jsx calls POST / with cookie
+              → if valid: restore username, render chat
+              → if invalid: redirect to /login
+```
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPENAI_API_KEY` | Yes | Your OpenAI API key |
+| `MONGODB_URI` | Yes | MongoDB connection string |
+| `TOKEN_KEY` | Yes | Secret used to sign/verify JWTs |
+
+---
+
+## Author
+
+Built by **Manish Patra**
