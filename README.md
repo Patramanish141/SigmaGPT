@@ -42,6 +42,24 @@ A full-stack ChatGPT clone built with React and Node.js. Supports user authentic
 
 ---
 
+## Live Demo
+
+Deployed on AWS EC2: [http://ec2-13-61-32-246.eu-north-1.compute.amazonaws.com](http://ec2-13-61-32-246.eu-north-1.compute.amazonaws.com)
+
+---
+
+## CI/CD
+
+This project uses **GitHub Actions** with **self-hosted runners** on AWS EC2 for continuous integration and deployment:
+
+- On every push to `main`, two jobs run in sequence:
+  - **Backend job** — installs dependencies, builds (if applicable), and restarts the Express server via `pm2`
+  - **Frontend job** — installs dependencies and builds the React app with Vite, which is then served via **nginx**
+- Environment variables (`.env`) are preserved across deployments and excluded from version control
+- Runner labels ensure jobs execute on the correct EC2 instance where the app is hosted
+
+Workflow file: [`.github/workflows/cicd.yml`](.github/workflows/cicd.yml)
+
 ## Project Structure
 
 ```
