@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import {ScaleLoader} from 'react-spinners';
 
 function ChatWindow(){
-    const {reply, setReply, prompt, setPrompt, currThreadId, prevChats, setPrevChats, setNewChat, username, setUsername} = useContext(Mycontext);
+    const {reply, setReply, prompt, setPrompt, currThreadId, prevChats, setPrevChats, setNewChat, username, setUsername, getAllThreads} = useContext(Mycontext);
     const [loading, setLoading] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
@@ -49,6 +49,7 @@ function ChatWindow(){
                     content: reply
                 }]
             ));
+            getAllThreads();
         }
 
         setPrompt("");
@@ -67,7 +68,7 @@ function ChatWindow(){
     return(
         <div className="chatWindow">
             <div className="navbar">
-                <span>SigmaGPT<i className="fa-solid fa-angle-down"></i></span>
+                <span>SigmaGPT</span>
                 <div className="userIconDiv" onClick={handleProfileClick}>
                     <span className="userIcon"><i className="fa-solid fa-user"></i></span>
                     {username && <span className="userName">{username}</span>}

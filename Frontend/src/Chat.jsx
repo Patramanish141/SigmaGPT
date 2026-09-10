@@ -35,9 +35,17 @@ function Chat(){
 
     }, [prevChats, reply])
 
+    if (newChat && !prevChats?.length) {
+        return (
+            <div className="empty-state">
+                <h1>Start a new chat</h1>
+                <p>Ask anything — SigmaGPT is ready when you are.</p>
+            </div>
+        );
+    }
+
     return(
         <>
-            {newChat && <h1>Start a new Chat</h1>}
             <div className="chats">
                 {
                     prevChats?.slice(0, -1).map((chat, idx) => 
