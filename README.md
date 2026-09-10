@@ -62,8 +62,8 @@ Deployed on AWS EC2: [http://ec2-16-171-18-152.eu-north-1.compute.amazonaws.com]
 This project uses **GitHub Actions** with **self-hosted runners** on AWS EC2 for continuous integration and deployment:
 
 - On every push to `main`, two jobs run in sequence:
-  - **Backend job** — installs dependencies, builds (if applicable), and restarts the Express server via `pm2`
-  - **Frontend job** — installs dependencies and builds the React app with Vite, which is then served via **nginx**
+  - **Backend job** — installs production dependencies only (`npm ci --omit=dev`, skipping Jest/Babel/`mongodb-memory-server`), builds (if applicable), and restarts the Express server via `pm2`
+  - **Frontend job** — installs dependencies (including dev tools needed to build, like Vite) and builds the React app, which is then served via **nginx**
 - Environment variables (`.env`) are preserved across deployments and excluded from version control
 - Runner labels ensure jobs execute on the correct EC2 instance where the app is hosted
 
