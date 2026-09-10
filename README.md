@@ -2,8 +2,6 @@
 
 A full-stack ChatGPT clone built with React and Node.js. Supports user authentication, persistent chat threads, and real-time AI responses powered by the OpenAI API.
 
-_Last verified deployment: workflow test commit._
-
 ---
 
 ## Features
@@ -46,7 +44,7 @@ _Last verified deployment: workflow test commit._
 
 ## Live Demo
 
-Deployed on AWS EC2: [http://ec2-13-61-32-246.eu-north-1.compute.amazonaws.com](http://ec2-13-61-32-246.eu-north-1.compute.amazonaws.com)
+Deployed on AWS EC2: [http://ec2-16-171-18-152.eu-north-1.compute.amazonaws.com](http://ec2-16-171-18-152.eu-north-1.compute.amazonaws.com)
 
 ---
 
