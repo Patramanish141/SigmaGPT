@@ -15,7 +15,7 @@ const PORT = 8080;
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: ["http://localhost:5173", "http://ec2-16-171-18-152.eu-north-1.compute.amazonaws.com"],
   credentials: true,
 }));
 
