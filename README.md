@@ -7,11 +7,13 @@ A full-stack ChatGPT clone built with React and Node.js. Supports user authentic
 ## Features
 
 - **JWT Authentication** — Signup, login, and logout with secure cookie-based tokens
+- **Authenticated Chat API** — All chat/thread endpoints require a valid session cookie
 - **Persistent Chat Threads** — Conversations are saved to MongoDB and restored on reload
 - **Thread Sidebar** — Browse, switch between, and delete previous conversations
 - **OpenAI Integration** — Messages are sent to the OpenAI API and streamed back as markdown
 - **Syntax Highlighting** — Code blocks in responses are rendered with `rehype-highlight`
 - **Dark Theme UI** — ChatGPT-style dark interface with animated backgrounds
+- **Automated Test Suites** — Jest/Supertest on the backend, Vitest/React Testing Library on the frontend
 
 ---
 
@@ -85,7 +87,9 @@ SigmaGPT/
 │   ├── utils/
 │   │   ├── SecretToken.js         # JWT creation helper
 │   │   └── openai.js              # OpenAI API call wrapper
-│   ├── server.js                  # Express app entry point
+│   ├── tests/                      # Jest + Supertest test suite
+│   ├── app.js                      # Express app (middleware + routes), imported by tests
+│   ├── server.js                  # app.listen() + DB connection, entry point
 │   └── .env                       # Environment variables (not committed)
 │
 └── Frontend/
@@ -97,6 +101,7 @@ SigmaGPT/
         ├── ChatWindow.jsx         # Main chat UI + navbar + logout
         ├── Chat.jsx               # Message list with typing animation
         ├── Sidebar.jsx            # Thread list, new chat, delete
+        ├── *.test.jsx             # Vitest + React Testing Library tests
         └── *.css                  # Per-component stylesheets
 ```
 
@@ -161,6 +166,8 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Chat
 
+All chat/thread routes require a valid `token` session cookie — requests without one get a `401`.
+
 | Method | Endpoint | Body / Params | Description |
 |--------|----------|---------------|-------------|
 | POST | `/api/chat` | `{ threadId, message }` | Send a message, get AI reply |
@@ -191,6 +198,41 @@ On page refresh → App.jsx calls POST / with cookie
               → if valid: restore username, render chat
               → if invalid: redirect to /login
 ```
+
+---
+
+## Testing
+
+### Backend (`backend/`)
+
+Jest + Supertest, with `mongodb-memory-server` for an isolated in-memory MongoDB (no real DB needed) and the OpenAI client mocked (no real API calls).
+
+```bash
+cd backend
+npm install
+npm test              # run the suite
+npm run test:coverage # run with a coverage report
+```
+
+Covers:
+- **Auth** (`tests/auth.test.js`) — signup creates a user with a hashed password, duplicate emails are rejected, login issues a verifiable JWT cookie, wrong password / unknown email are rejected
+- **Chat** (`tests/chat.test.js`) — chat/thread routes reject unauthenticated requests with `401`; authenticated requests create/list/fetch threads and call the mocked OpenAI client with the right arguments
+
+### Frontend (`Frontend/`)
+
+Vitest + React Testing Library, with all network calls (`axios`, `fetch`) mocked.
+
+```bash
+cd Frontend
+npm install
+npm test              # run the suite
+npm run test:coverage # run with a coverage report
+```
+
+Covers:
+- **Login** — renders the form, submits credentials and calls the login API with the right payload, shows the error message on failed login
+- **Chat** — renders the empty-state prompt vs. user/assistant message bubbles
+- **ChatWindow** — sends the typed prompt to `/api/chat` and stores the returned reply
 
 ---
 

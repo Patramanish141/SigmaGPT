@@ -30,7 +30,7 @@ function App() {
 
   const getAllThreads = async () => {
     try {
-      const response = await fetch("http://ec2-16-171-18-152.eu-north-1.compute.amazonaws.com:8080/api/thread");
+      const response = await fetch("http://ec2-16-171-18-152.eu-north-1.compute.amazonaws.com:8080/api/thread", { credentials: "include" });
       const res = await response.json();
       const filteredData = res.map(thread => ({ threadId: thread.threadId, title: thread.title }));
       setAllThreads(filteredData);
