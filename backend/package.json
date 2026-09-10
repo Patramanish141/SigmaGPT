@@ -1,5 +1,9 @@
 {
   "type": "module",
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
@@ -11,5 +15,13 @@
     "mongoose": "^9.6.3",
     "nodemon": "^3.1.14",
     "openai": "^6.39.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
+    "babel-jest": "^30.5.1",
+    "jest": "^30.5.1",
+    "mongodb-memory-server": "^11.2.0",
+    "supertest": "^7.2.2"
   }
 }

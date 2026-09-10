@@ -1,6 +1,7 @@
 import express from 'express';
 import Thread  from '../models/Thread.js';
 import getOpenAIAPIResponse from "../utils/openai.js"
+import { requireAuth } from "../middlewares/AuthMiddleware.js";
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ router.post("/test", async(req, res)=>{
 })
 
 //Get all routes
-router.get("/thread", async(req, res)=>{
+router.get("/thread", requireAuth, async(req, res)=>{
     try{
         const threads = await Thread.find({}).sort({updatedAt: -1});
         res.json(threads);
@@ -32,7 +33,7 @@ router.get("/thread", async(req, res)=>{
     }
 })
 
-router.get("/thread/:threadId", async(req, res)=>{
+router.get("/thread/:threadId", requireAuth, async(req, res)=>{
     const {threadId} = req.params;
     try{
         const thread = await Thread.findOne({ threadId });
@@ -48,7 +49,7 @@ router.get("/thread/:threadId", async(req, res)=>{
     }
 });
 
-router.delete("/thread/:threadId", async(req, res)=>{
+router.delete("/thread/:threadId", requireAuth, async(req, res)=>{
     const {threadId} = req.params;
 
     try{
@@ -65,7 +66,7 @@ router.delete("/thread/:threadId", async(req, res)=>{
     }
 })
 
-router.post("/chat", async(req, res)=>{
+router.post("/chat", requireAuth, async(req, res)=>{
     const {threadId, message} = req.body;
 
     if(!threadId || !message){

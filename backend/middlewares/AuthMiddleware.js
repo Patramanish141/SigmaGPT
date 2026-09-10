@@ -18,3 +18,21 @@ export const userVerification = (req, res) => {
     }
   })
 }
+
+export const requireAuth = (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  jwt.verify(token, process.env.TOKEN_KEY, async (err, data) => {
+    if (err) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const user = await User.findById(data.id);
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    req.userId = data.id;
+    next();
+  });
+};
