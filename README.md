@@ -2,6 +2,8 @@
 
 A full-stack ChatGPT clone built with React and Node.js. Supports user authentication, persistent chat threads, and real-time AI responses powered by the OpenAI API.
 
+_Last verified deployment: workflow test commit._
+
 ---
 
 ## Features
