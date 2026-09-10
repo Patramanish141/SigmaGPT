@@ -20,7 +20,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    axios.post("http://localhost:8080/", {}, { withCredentials: true })
+    axios.post("http://ec2-16-171-18-152.eu-north-1.compute.amazonaws.com:8080/", {}, { withCredentials: true })
       .then(({ data }) => {
         if (data.status) setUsername(data.user);
         setAuthLoading(false);
@@ -30,7 +30,7 @@ function App() {
 
   const getAllThreads = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/thread");
+      const response = await fetch("http://ec2-16-171-18-152.eu-north-1.compute.amazonaws.com:8080/api/thread");
       const res = await response.json();
       const filteredData = res.map(thread => ({ threadId: thread.threadId, title: thread.title }));
       setAllThreads(filteredData);

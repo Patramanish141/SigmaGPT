@@ -26,7 +26,7 @@ const Login = () => {
     setLoading(true);
     try {
       const { data } = await axios.post(
-        "http://localhost:8080/login",
+        "http://ec2-16-171-18-152.eu-north-1.compute.amazonaws.com:8080/login",
         { ...inputValue },
         { withCredentials: true }
       );
