@@ -46,6 +46,13 @@ A full-stack ChatGPT clone built with React and Node.js. Supports user authentic
 
 Deployed on AWS EC2: [http://ec2-16-171-18-152.eu-north-1.compute.amazonaws.com](http://ec2-16-171-18-152.eu-north-1.compute.amazonaws.com)
 
+**Demo account** (feel free to use this to log in and try the app):
+
+| Field | Value |
+|---|---|
+| Email | `recruiter.demo@sigmagpt.dev` |
+| Password | `SigmaDemo@2026` |
+
 ---
 
 ## CI/CD
