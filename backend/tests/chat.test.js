@@ -30,11 +30,17 @@ const credentials = {
   password: "supersecret1",
 };
 
-async function loginAndGetCookie() {
-  await request(app).post("/signup").send(credentials);
+const otherUser = {
+  email: "carol@example.com",
+  username: "carol",
+  password: "differentpass9",
+};
+
+async function loginAndGetCookie(user = credentials) {
+  await request(app).post("/signup").send(user);
   const res = await request(app)
     .post("/login")
-    .send({ email: credentials.email, password: credentials.password });
+    .send({ email: user.email, password: user.password });
   return res.headers["set-cookie"];
 }
 
@@ -116,5 +122,86 @@ describe("chat routes (authenticated)", () => {
     expect(res.status).toBe(404);
     expect(res.body.error).toBe("Missing required fields");
     expect(getOpenAIAPIResponse).not.toHaveBeenCalled();
+  });
+});
+
+// Regression: threads used to be stored with no owner and read back with
+// Thread.find({}), so every account saw every other account's chat history.
+describe("threads are isolated per user", () => {
+  let cookieA;
+  let cookieB;
+
+  beforeEach(async () => {
+    cookieA = await loginAndGetCookie(credentials);
+    cookieB = await loginAndGetCookie(otherUser);
+
+    await request(app)
+      .post("/api/chat")
+      .set("Cookie", cookieA)
+      .send({ threadId: "alice-thread", message: "Alice's private message" });
+  });
+
+  test("user B's thread list does not contain user A's thread", async () => {
+    const res = await request(app).get("/api/thread").set("Cookie", cookieB);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(0);
+  });
+
+  test("user B gets 404 fetching user A's thread by id", async () => {
+    const res = await request(app)
+      .get("/api/thread/alice-thread")
+      .set("Cookie", cookieB);
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe("Thread not found");
+    // the message content must not leak in any form
+    expect(JSON.stringify(res.body)).not.toContain("Alice's private message");
+  });
+
+  test("user B cannot delete user A's thread, and it survives the attempt", async () => {
+    const res = await request(app)
+      .delete("/api/thread/alice-thread")
+      .set("Cookie", cookieB);
+
+    expect(res.status).toBe(404);
+
+    const stillThere = await request(app)
+      .get("/api/thread/alice-thread")
+      .set("Cookie", cookieA);
+    expect(stillThere.status).toBe(200);
+    expect(stillThere.body).toHaveLength(2);
+  });
+
+  test("user A still sees their own thread", async () => {
+    const res = await request(app).get("/api/thread").set("Cookie", cookieA);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].threadId).toBe("alice-thread");
+  });
+
+  // Guards the compound {userId, threadId} index: the old global unique index
+  // on threadId alone would make this collide with a duplicate-key 500.
+  test("user B reusing user A's threadId gets their own separate thread", async () => {
+    const res = await request(app)
+      .post("/api/chat")
+      .set("Cookie", cookieB)
+      .send({ threadId: "alice-thread", message: "Bob's own message" });
+
+    expect(res.status).toBe(200);
+
+    const bobsThread = await request(app)
+      .get("/api/thread/alice-thread")
+      .set("Cookie", cookieB);
+    expect(bobsThread.body).toHaveLength(2);
+    expect(bobsThread.body[0].content).toBe("Bob's own message");
+
+    // A's thread of the same id is untouched
+    const alicesThread = await request(app)
+      .get("/api/thread/alice-thread")
+      .set("Cookie", cookieA);
+    expect(alicesThread.body).toHaveLength(2);
+    expect(alicesThread.body[0].content).toBe("Alice's private message");
   });
 });

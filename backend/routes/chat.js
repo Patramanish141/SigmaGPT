@@ -5,26 +5,21 @@ import { requireAuth } from "../middlewares/AuthMiddleware.js";
 
 const router = express.Router();
 
-//test
-router.post("/test", async(req, res)=>{
-    try{
-        const thread = new Thread({
-            threadId:"xyz",
-            title:"testing new Thread"
-        })
-
-        const response = await thread.save();
-        res.send(response);
-    } catch(err){
-        console.log(err);
-        res.status(500).json({error: "Failed to save in DB"})
+// Fail closed: without an id every query below would be unscoped, and Mongoose
+// strips undefined from filters, so find({userId: undefined}) returns everything.
+const requireUserId = (req, res, next) => {
+    if (!req.userId) {
+        return res.status(401).json({ error: "Unauthorized" });
     }
-})
+    next();
+};
+
+router.use(requireAuth, requireUserId);
 
 //Get all routes
-router.get("/thread", requireAuth, async(req, res)=>{
+router.get("/thread", async(req, res)=>{
     try{
-        const threads = await Thread.find({}).sort({updatedAt: -1});
+        const threads = await Thread.find({userId: req.userId}).sort({updatedAt: -1});
         res.json(threads);
 
     } catch(err){
@@ -33,13 +28,13 @@ router.get("/thread", requireAuth, async(req, res)=>{
     }
 })
 
-router.get("/thread/:threadId", requireAuth, async(req, res)=>{
+router.get("/thread/:threadId", async(req, res)=>{
     const {threadId} = req.params;
     try{
-        const thread = await Thread.findOne({ threadId });
+        const thread = await Thread.findOne({ threadId, userId: req.userId });
 
         if(!thread){
-            return res.status(400).json({error: "Thread not found"});
+            return res.status(404).json({error: "Thread not found"});
         }
 
         res.json(thread.messages);
@@ -49,11 +44,11 @@ router.get("/thread/:threadId", requireAuth, async(req, res)=>{
     }
 });
 
-router.delete("/thread/:threadId", requireAuth, async(req, res)=>{
+router.delete("/thread/:threadId", async(req, res)=>{
     const {threadId} = req.params;
 
     try{
-        const deletedThread = await Thread.findOneAndDelete({threadId});
+        const deletedThread = await Thread.findOneAndDelete({threadId, userId: req.userId});
 
         if(!deletedThread){
             return res.status(404).json({error: "Thread not found"});
@@ -66,18 +61,19 @@ router.delete("/thread/:threadId", requireAuth, async(req, res)=>{
     }
 })
 
-router.post("/chat", requireAuth, async(req, res)=>{
+router.post("/chat", async(req, res)=>{
     const {threadId, message} = req.body;
 
     if(!threadId || !message){
         return res.status(404).json({error: "Missing required fields"})
     }
     try{
-        let thread = await Thread.findOne({threadId});
+        let thread = await Thread.findOne({threadId, userId: req.userId});
 
         if(!thread){
             //Create a new thread in Db
             thread = new Thread({
+                userId: req.userId,
                 threadId,
                 title: message,
                 messages :[{
