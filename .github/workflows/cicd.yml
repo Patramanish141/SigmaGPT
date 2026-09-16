@@ -11,17 +11,15 @@ jobs:
       run:
         working-directory: ./backend
     steps:
-      - name: Backup .env
-        working-directory: .
-        run: |
-          if [ -f backend/.env ]; then cp backend/.env /tmp/env_backup; fi
-
       - uses: actions/checkout@v4
 
-      - name: Restore .env
-        working-directory: .
+      - name: Install .env from host
         run: |
-          if [ -f /tmp/env_backup ]; then cp /tmp/env_backup backend/.env; fi
+          if [ ! -f /etc/sigmagpt/backend.env ]; then
+            echo "::error::/etc/sigmagpt/backend.env not found on the runner"
+            exit 1
+          fi
+          cp /etc/sigmagpt/backend.env .env
 
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -32,6 +30,14 @@ jobs:
 
       - run: npm ci --omit=dev
       - run: npm run build --if-present
+
+      - name: Verify .env
+        run: |
+          test -s .env || { echo "::error::backend/.env is missing or empty"; exit 1; }
+          for key in MONGODB_URI TOKEN_KEY OPENAI_API_KEY; do
+            grep -qE "^[[:space:]]*${key}[[:space:]]*=" .env || { echo "::error::${key} missing from backend/.env"; exit 1; }
+          done
+
       - run: sudo pm2 restart backend || sudo pm2 start server.js --name backend
 
   frontend:
